@@ -15,19 +15,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    services:
-      etcd:
-        image: gcr.io/etcd-development/etcd:v3.3.6
-        ports:
-          - 2379:2379
-          - 2380:2380
-      apisix:
-        image: apache/apisix
-        ports:
-          - 9080:9080
-          - 9443:9443
-
     steps:
+
+    - name: run etcd
+      uses: gcr.io/etcd-development/etcd:v3.3.12
+
+    - name: run apisix
+      uses: apache/apisix
+
     - uses: actions/checkout@v2
 
     - name: Set up JDK 1.8
