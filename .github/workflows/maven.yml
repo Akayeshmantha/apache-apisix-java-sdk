@@ -15,10 +15,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    steps:
+    services:
+      etcd:
+        image: gcr.io/etcd-development/etcd:v3.3.12
+        ports:
+          - 2379:2379
+          - 2380:2380
 
-    - name: run etcd
-      uses: docker://gcr.io/etcd-development/etcd:v3.3.12
+    steps:
 
     - name: run apisix
       uses: docker://apache/apisix
