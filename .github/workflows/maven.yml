@@ -18,10 +18,10 @@ jobs:
     steps:
 
     - name: run etcd
-      uses: gcr.io/etcd-development/etcd:v3.3.12
+      uses: docker://gcr.io/etcd-development/etcd:v3.3.12
 
     - name: run apisix
-      uses: apache/apisix
+      uses: docker://apache/apisix
 
     - uses: actions/checkout@v2
 
