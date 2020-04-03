@@ -125,10 +125,12 @@ public abstract class BaseClient {
         T model;
         List<T> result = new ArrayList<>();
 
-        for(int i=0; i<list.size();i++){
-            item = list.get(i);
-            model = item.value;
-            result.add(model);
+        if(list!=null){
+            for(int i=0; i<list.size();i++){
+                item = list.get(i);
+                model = item.value;
+                result.add(model);
+            }
         }
 
         return result;
