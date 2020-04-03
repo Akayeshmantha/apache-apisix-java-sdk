@@ -1,7 +1,4 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
-name: Java CI with Maven
+name: testing
 
 on:
   push:
@@ -17,15 +14,21 @@ jobs:
 
     services:
       etcd:
-        image: gcr.io/etcd-development/etcd:v3.3.12
+        image: bitnami/etcd:3.3.13-r80
         ports:
           - 2379:2379
           - 2380:2380
+        env:
+          ALLOW_NONE_AUTHENTICATION: yes
+
+      apisix:
+        image: johz/apisix:latest
+        env:
+          ETCD_HOST: etcd
+        ports:
+          - 9080:9080
 
     steps:
-
-    - name: run apisix
-      uses: docker://apache/apisix
 
     - uses: actions/checkout@v2
 
