@@ -26,8 +26,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Multi<Route>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/routes"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
 
         List<Route> result = this.arrangeMulti(rsp.node.nodes);
@@ -36,13 +40,17 @@ public class AdminClient extends BaseClient {
     }
 
     //按id获取路由
-    public Route getRote(String id) throws ApisixSDKExcetion {
+    public Route getRoute(String id) throws ApisixSDKExcetion {
         Wrap<Item<Route>> rsp = null;
         try {
             Type type = new TypeToken<Wrap<Item<Route>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/routes/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -57,10 +65,15 @@ public class AdminClient extends BaseClient {
     public Route putRoute(String id, Route route) throws ApisixSDKExcetion {
         Wrap<Item<Route>> rsp = null;
         try {
+            route = resolveUpstream(route);
             Type type = new TypeToken<Wrap<Item<Route>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(route, HttpProfile.REQ_PUT, "/apisix/admin/routes/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -69,13 +82,69 @@ public class AdminClient extends BaseClient {
     public Route postRoute(Route route) throws ApisixSDKExcetion {
         Wrap<Item<Route>> rsp = null;
         try {
+            route = resolveUpstream(route);
             Type type = new TypeToken<Wrap<Item<Route>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(route, HttpProfile.REQ_POST, "/apisix/admin/routes/"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
+
+    private Route resolveUpstream(Route route) throws ApisixSDKExcetion {
+        Upstream upstream = route.getUpstream();
+        if(upstream != null) {
+            K8sDeploymentInfo k8sDeploymentInfo = upstream.getK8sDeploymentInfo();
+            //k8s deployment info is not empty
+            if (k8sDeploymentInfo != null) {
+                String namespace = k8sDeploymentInfo.getNamespace();
+                String deployName = k8sDeploymentInfo.getDeployName();
+                String serviceName = k8sDeploymentInfo.getServiceName();
+                if(deployName != null && !deployName.equals("") || (serviceName != null && !serviceName.equals(""))){
+                    String upstreamId = "pod".equals(k8sDeploymentInfo.getBackendType()) ?
+                            namespace + "-" + deployName + "-" + k8sDeploymentInfo.getPort() :
+                            namespace + "-" + serviceName + "-" + k8sDeploymentInfo.getPort();
+                    Upstream res = putUpstream(upstreamId, upstream);
+                    if (k8sDeploymentInfo.toString().equals(res.getK8sDeploymentInfo().toString())) {
+                        //replace to upstream id
+                        route.setUpstream(null);
+                        route.setUpstreamId(upstreamId);
+                    }
+                }
+            }
+        }
+        return route;
+    }
+
+    private Service resolveUpstream(Service service) throws ApisixSDKExcetion {
+        Upstream upstream = service.getUpstream();
+        if(upstream != null) {
+            K8sDeploymentInfo k8sDeploymentInfo = upstream.getK8sDeploymentInfo();
+            //k8s deployment info is not empty
+            if (k8sDeploymentInfo != null) {
+                String namespace = k8sDeploymentInfo.getNamespace();
+                String deployName = k8sDeploymentInfo.getDeployName();
+                String serviceName = k8sDeploymentInfo.getServiceName();
+                if(deployName != null && !deployName.equals("") || (serviceName != null && !serviceName.equals(""))){
+                    String upstreamId = "pod".equals(k8sDeploymentInfo.getBackendType()) ?
+                            namespace + "-" + deployName + "-" + k8sDeploymentInfo.getPort() :
+                            namespace + "-" + serviceName + "-" + k8sDeploymentInfo.getPort();
+                    Upstream res = putUpstream(upstreamId, upstream);
+                    if (k8sDeploymentInfo.toString().equals(res.getK8sDeploymentInfo().toString())) {
+                        //replace to upstream id
+                        service.setUpstream(null);
+                        service.setUpstreamId(upstreamId);
+                    }
+                }
+            }
+        }
+        return service;
+    }
+
 
     //service列表
     public List<Service> listServices() throws ApisixSDKExcetion {
@@ -83,8 +152,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Multi<Service>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/services"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
 
         List<Service> result = this.arrangeMulti(rsp.node.nodes);
@@ -98,8 +171,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Service>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/services/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -114,10 +191,15 @@ public class AdminClient extends BaseClient {
     public Service putService(String id, Service service) throws ApisixSDKExcetion {
         Wrap<Item<Service>> rsp = null;
         try {
+            service = resolveUpstream(service);
             Type type = new TypeToken<Wrap<Item<Service>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(service, HttpProfile.REQ_PUT, "/apisix/admin/services/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -126,10 +208,15 @@ public class AdminClient extends BaseClient {
     public Service postService(Service service) throws ApisixSDKExcetion {
         Wrap<Item<Service>> rsp = null;
         try {
+            service = resolveUpstream(service);
             Type type = new TypeToken<Wrap<Item<Service>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(service, HttpProfile.REQ_POST, "/apisix/admin/services/"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -140,8 +227,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Multi<Upstream>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/upstreams"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
 
         List<Upstream> result = this.arrangeMulti(rsp.node.nodes);
@@ -155,8 +246,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Upstream>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/upstreams/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -173,8 +268,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Upstream>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(upstream, HttpProfile.REQ_PUT, "/apisix/admin/upstreams/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -185,8 +284,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Upstream>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(upstream, HttpProfile.REQ_POST, "/apisix/admin/upstreams/"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -197,8 +300,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Multi<Consumer>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/consumers"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
 
         List<Consumer> result = this.arrangeMulti(rsp.node.nodes);
@@ -212,8 +319,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Consumer>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/consumers/" + username), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -230,8 +341,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Consumer>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(consumer, HttpProfile.REQ_PUT, "/apisix/admin/consumers/" + username), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -242,8 +357,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<Consumer>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(consumer, HttpProfile.REQ_POST, "/apisix/admin/consumers/"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -254,8 +373,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Multi<SSL>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/ssl"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
 
         List<SSL> result = this.arrangeMulti(rsp.node.nodes);
@@ -269,8 +392,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<SSL>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(HttpProfile.REQ_GET, "/apisix/admin/ssl/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (ApisixSDKExcetion | JsonSyntaxException e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -287,8 +414,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<SSL>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(ssl, HttpProfile.REQ_PUT, "/apisix/admin/ssl/" + id), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }
@@ -299,8 +430,12 @@ public class AdminClient extends BaseClient {
         try {
             Type type = new TypeToken<Wrap<Item<SSL>>>(){}.getType();
             rsp  = gson.fromJson(this.doRequest(ssl, HttpProfile.REQ_POST, "/apisix/admin/ssl/"), type);
-        } catch (JsonSyntaxException e) {
-            throw new ApisixSDKExcetion(e.getMessage());
+        } catch (JsonSyntaxException | ApisixSDKExcetion e) {
+            if(e instanceof ApisixSDKExcetion){
+                throw e;
+            }else {
+                throw new ApisixSDKExcetion(e.getMessage());
+            }
         }
         return rsp.node.value;
     }

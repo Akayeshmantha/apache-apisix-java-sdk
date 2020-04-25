@@ -32,4 +32,9 @@ public class Upstream extends BaseModel{
     @Expose
     private String desc;
 
+    @SerializedName("k8s_deployment_info")
+    @Expose
+    private K8sDeploymentInfo k8sDeploymentInfo;
+
+
 }
