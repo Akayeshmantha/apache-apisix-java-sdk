@@ -47,7 +47,7 @@ route.setDesc("route added by java sdk");
 route.setMethods(methods);
 route.setUpstream(upstream);
 
-Route res = adminClient.putRote(id, route);
+Route res = adminClient.putRoute(id, route);
 
 ```
 
