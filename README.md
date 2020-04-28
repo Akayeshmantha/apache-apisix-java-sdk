@@ -15,13 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.apisix.admin.AdminClient;
-import org.apache.apisix.admin.model.Route;
-import org.apache.apisix.admin.model.Upstream;
-import org.apache.apisix.common.profile.Credential;
-import org.apache.apisix.common.profile.DefaultCredential;
-import org.apache.apisix.common.profile.DefaultProfile;
-import org.apache.apisix.common.profile.Profile;
+import com.apiseven.apisix.admin.AdminClient;
+import com.apiseven.apisix.admin.model.Route;
+import com.apiseven.apisix.admin.model.Upstream;
+import com.apiseven.apisix.common.profile.Credential;
+import com.apiseven.apisix.common.profile.DefaultCredential;
+import com.apiseven.apisix.common.profile.DefaultProfile;
+import com.apiseven.apisix.common.profile.Profile;
 
 
 String endpoint = "127.0.0.1:9080";

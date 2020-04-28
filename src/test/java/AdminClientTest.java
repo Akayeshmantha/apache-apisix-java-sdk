@@ -7,17 +7,17 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.apache.apisix.admin.model.*;
-import org.apache.apisix.admin.model.plugin.KeyAuth;
-import org.apache.apisix.admin.model.plugin.LimitCount;
-import org.apache.apisix.admin.model.plugin.Plugin;
+import com.apiseven.apisix.admin.model.*;
+import com.apiseven.apisix.admin.model.plugin.KeyAuth;
+import com.apiseven.apisix.admin.model.plugin.LimitCount;
+import com.apiseven.apisix.admin.model.plugin.Plugin;
 
-import org.apache.apisix.admin.AdminClient;
-import org.apache.apisix.common.profile.Credential;
-import org.apache.apisix.common.profile.DefaultCredential;
-import org.apache.apisix.common.profile.DefaultProfile;
-import org.apache.apisix.common.profile.Profile;
-import org.apache.apisix.common.exception.ApisixSDKExcetion;
+import com.apiseven.apisix.admin.AdminClient;
+import com.apiseven.apisix.common.profile.Credential;
+import com.apiseven.apisix.common.profile.DefaultCredential;
+import com.apiseven.apisix.common.profile.DefaultProfile;
+import com.apiseven.apisix.common.profile.Profile;
+import com.apiseven.apisix.common.exception.ApisixSDKExcetion;
 
 
 public class AdminClientTest {
@@ -25,7 +25,7 @@ public class AdminClientTest {
     private String version = "1.1";
     private String apiKey = "edd1c9f034335f136f87ad84b625c8f1";
 
-    //@Test
+    @Test
     public void testUpstream() throws ApisixSDKExcetion {
         Credential credential = new DefaultCredential(apiKey);
         Profile profile = DefaultProfile.getProfile(endpoint, version, credential);
@@ -72,8 +72,7 @@ public class AdminClientTest {
 
     }
 
-
-    //@Test
+    @Test
     public void testService() throws ApisixSDKExcetion {
         Credential credential = new DefaultCredential(apiKey);
         Profile profile = DefaultProfile.getProfile(endpoint, version, credential);
@@ -136,7 +135,7 @@ public class AdminClientTest {
 
     }
 
-    //@Test
+    @Test
     public void testRoute() throws ApisixSDKExcetion {
         Credential credential = new DefaultCredential(apiKey);
         Profile profile = DefaultProfile.getProfile(endpoint, version, credential);
@@ -283,7 +282,8 @@ public class AdminClientTest {
         String namespace = k8sInfo.getNamespace();
         String deployName = k8sInfo.getDeployName();
         String serviceName = k8sInfo.getServiceName();
-        String upstreamId = namespace + "-" + deployName + "-" + serviceName;
+
+        String upstreamId = namespace + "-" + deployName + "-" + serviceName + "-" + k8sInfo.getPort();
 
         assertTrue(adminClient.deleteRoute(routeId));
         assertTrue(adminClient.deleteUpstream(upstreamId));
@@ -301,7 +301,7 @@ public class AdminClientTest {
         }
     }
 
-    //@Test
+    @Test
     public void testConsumer() throws ApisixSDKExcetion {
         Credential credential = new DefaultCredential(apiKey);
         Profile profile = DefaultProfile.getProfile(endpoint, version, credential);
@@ -345,7 +345,7 @@ public class AdminClientTest {
 
     }
 
-    //@Test
+    @Test
     public void testSSL() throws ApisixSDKExcetion {
         Credential credential = new DefaultCredential(apiKey);
         Profile profile = DefaultProfile.getProfile(endpoint, version, credential);

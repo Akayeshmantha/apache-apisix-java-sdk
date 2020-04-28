@@ -22,9 +22,9 @@ jobs:
           ALLOW_NONE_AUTHENTICATION: yes
 
       apisix:
-        image: johz/apisix:latest
+        image: johz/apisix:1.2.8
         env:
-          ETCD_HOST: etcd
+          APISIX_ETCD_HOST: etcd
         ports:
           - 9080:9080
 
